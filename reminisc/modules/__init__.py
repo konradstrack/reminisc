@@ -1,1 +1,0 @@
-registered_modules = ["reminisc.modules.example_client_module"]
