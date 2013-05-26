@@ -1,7 +1,6 @@
 import random
 import time
 import reminisc.core.processing.tasks as tasks
-import reminisc.core.processing.queues as queues
 
 from reminisc.modules.abstract_module import AbstractModule
 
@@ -11,11 +10,10 @@ def start_module(global_config, module_config):
 
 class ExampleClientModule(AbstractModule):
 
-	def __init__(self, global_config, module_config):
-		super().__init__(global_config, module_config)
+	def __init__(self, global_config, module_config, command_queue):
+		super().__init__(global_config, module_config, command_queue)
 
 		self.commands = ["first", "second", "third"]
-		self.queue = queues.tasks_queue
 
 	def should_be_started(self):
 		return True
@@ -30,4 +28,4 @@ class ExampleClientModule(AbstractModule):
 		command = random.choice(self.commands)
 		task = tasks.Task(command)
 
-		self.queue.put(task)
+		self.command_queue.put(task)

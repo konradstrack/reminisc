@@ -39,7 +39,7 @@ class Application(object):
 
 		def process_tasks():
 			logger.info("Starting processor")
-			processor = tasks.TaskProcessor(queues.tasks_queue)
+			processor = tasks.TaskProcessor(queues.command_queue)
 			processor.start()
 
 		thread = threading.Thread(target=process_tasks)
@@ -50,6 +50,7 @@ class Application(object):
 		"""Responsible for starting all enabled modules in separate threads."""
 
 		global_config_dict = self.__config.as_config_dict()
+		queue = queues.command_queue
 
 		for module_path in modules:
 			logger.debug("Inspecting module: {}".format(module_path))
@@ -71,7 +72,7 @@ class Application(object):
 
 			for cls in classes:
 				# instantiate the module class
-				mod_instance = cls(global_config_dict, config_dict)
+				mod_instance = cls(global_config_dict, config_dict, queue)
 
 				# start thread for the module if can be started
 				if mod_instance.should_be_started():

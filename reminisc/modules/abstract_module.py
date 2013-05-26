@@ -4,12 +4,13 @@ class AbstractModule(metaclass=abc.ABCMeta):
 	"""This abstract class should be inherited by all Reminisc modules. 
 	Only modules extending this class will be instantiated and executed."""
 
-	def __init__(self, global_config, module_config):
+	def __init__(self, global_config, module_config, command_queue):
 		"""Global config for the application, and specific config for the module
 		are passed during instantiation."""
 
 		self.global_config = global_config
 		self.module_config = module_config
+		self.command_queue = command_queue
 
 	@abc.abstractmethod
 	def should_be_started(self):
