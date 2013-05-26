@@ -1,6 +1,6 @@
 import random
 import time
-import reminisc.core.processing.tasks as tasks
+import reminisc.core.processing.commands as commands
 
 from reminisc.modules.abstract_module import AbstractModule
 
@@ -25,7 +25,7 @@ class ExampleClientModule(AbstractModule):
 			self.__generate_task()
 
 	def __generate_task(self):
-		command = random.choice(self.commands)
-		task = tasks.Task(command)
+		content = random.choice(self.commands)
+		command = commands.NewMessage(content)
 
-		self.command_queue.put(task)
+		self.command_queue.put(command)

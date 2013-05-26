@@ -5,7 +5,7 @@ import logging
 import inspect
 
 import reminisc.core.processing.queues as queues
-import reminisc.core.processing.tasks as tasks
+import reminisc.core.processing.processor as processor
 import reminisc.modules.abstract_module as am
 import reminisc.config.reader as configreader
 import reminisc.config.defaults as defaults
@@ -37,12 +37,12 @@ class Application(object):
 	def __start_processing(self):
 		"""Starts threads responsible for processing incoming data."""
 
-		def process_tasks():
+		def process_commands():
 			logger.info("Starting processor")
-			processor = tasks.TaskProcessor(queues.command_queue)
-			processor.start()
+			command_processor = processor.CommandProcessor(queues.command_queue)
+			command_processor.start()
 
-		thread = threading.Thread(target=process_tasks)
+		thread = threading.Thread(target=process_commands)
 		thread.deamon = True
 		thread.start()
 
