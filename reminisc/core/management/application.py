@@ -81,4 +81,4 @@ class Application(object):
 					thread.daemon = True
 					thread.start()
 				else:
-					logger.warn("Module class {} is disabled".format(cls))
+					logger.warn("Module class {} is disabled".format(cls.__name__))
