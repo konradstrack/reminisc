@@ -2,9 +2,11 @@ import argparse
 import threading
 import importlib
 import logging
+import inspect
+
 import reminisc.core.processing.queues as queues
 import reminisc.core.processing.tasks as tasks
-import reminisc.modules as modules
+import reminisc.modules.abstract_module as am
 import reminisc.config.reader as configreader
 import reminisc.config.defaults as defaults
 
@@ -50,16 +52,33 @@ class Application(object):
 		global_config_dict = self.__config.as_config_dict()
 
 		for module_path in modules:
-			logger.info("Starting module: {}".format(module_path))
+			logger.debug("Inspecting module: {}".format(module_path))
 
 			# parse module config and convert it to a dict
-			module_config = configreader.read_config_file(defaults.get_module_config_file(module_path))
-			module_config_dict = module_config.as_config_dict()
+			config = configreader.read_config_file(defaults.get_module_config_file(module_path))
+			config_dict = config.as_config_dict()
 
 			# import the module
 			module = importlib.import_module(module_path)
 
-			# start thread for the module
-			thread = threading.Thread(target=module.start_module, args=(global_config_dict, module_config_dict))
-			thread.daemon = True
-			thread.start()
+			# find all classes in the module extending AbstractModule
+			def is_reminisc_module(obj):
+				return (inspect.isclass(obj) and
+					issubclass(obj, am.AbstractModule) and
+					not inspect.isabstract(obj))
+ 
+			classes = [cls for name, cls in inspect.getmembers(module) if is_reminisc_module(cls)]
+
+			for cls in classes:
+				# instantiate the module class
+				mod_instance = cls(global_config_dict, config_dict)
+
+				# start thread for the module if can be started
+				if mod_instance.should_be_started():
+					logger.info("Starting {}".format(cls.__name__))
+
+					thread = threading.Thread(target=mod_instance.start)
+					thread.daemon = True
+					thread.start()
+				else:
+					logger.warn("Module class {} is disabled".format(cls))
