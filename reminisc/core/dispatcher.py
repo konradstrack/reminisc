@@ -8,17 +8,20 @@ class TypeDispatcher(object):
 		self.__map = dict()
 		self.__default = None
 
+	def on(self, func):
+		def decorator(objself, obj):
+			self.dispatch(objself, obj)
+		return decorator
+
 	def when(self, cls):
 		def register(func):
 			self.__map[cls] = func
 			return func
 		return register
 
-	def default(self):
-		def register(func):
-			self.__default = func
-			return func
-		return register
+	def default(self, func):
+		self.__default = func
+		return func
 
 	def dispatch(self, objself, obj):
 		if obj.__class__ in self.__map:

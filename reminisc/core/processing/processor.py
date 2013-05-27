@@ -14,7 +14,7 @@ class CommandProcessor(object):
 
 	def _process_next(self):
 		task = self.queue.get()
-		dispatch.dispatch(self, task)
+		self.process(task)
 
 	def start(self):
 		while True:
@@ -27,3 +27,12 @@ class CommandProcessor(object):
 	@dispatch.when(commands.NewContact)
 	def process(self, command):
 		logger.debug("New contact: {}".format(command))
+
+	@dispatch.default
+	def process(self, command):
+		logger.debug("Default processor: {}".format(command))
+
+	# TODO: rewrite dispatcher, so that this method doesn't have to be the last one
+	@dispatch.on
+	def process(self, command):
+		pass
