@@ -25,3 +25,9 @@ class AbstractModule(metaclass=abc.ABCMeta):
 		It will be executed if should_be_started() method returns True."""
 
 		return
+
+	@abc.abstractmethod
+	def default_config(self):
+		"""Returns content of the default config file for this module"""
+
+		return

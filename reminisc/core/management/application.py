@@ -2,13 +2,14 @@ import argparse
 import threading
 import importlib
 import logging
-import inspect
 
 import reminisc.core.processing.queues as queues
 import reminisc.core.processing.processor as processor
 import reminisc.modules.abstract_module as am
-import reminisc.config.reader as configreader
+import reminisc.config.reader as config_reader
+import reminisc.config.generator as config_generator
 import reminisc.config.defaults as defaults
+import reminisc.modules.utils as module_utils
 
 logger = logging.getLogger(__name__)
 
@@ -20,11 +21,20 @@ class Application(object):
 
 		# we don't take any arguments for now
 		parser = argparse.ArgumentParser()
+		parser.add_argument('--config-directory', help='config directory location')
+		parser.add_argument('--create-config', action='store_true', help='generate default configuration files')
 		args = parser.parse_args()
 
-		# TODO: add config location from command line
-		configreader.create_config_file_if_not_exists(defaults.config_file_path)
-		self.__config = configreader.read_config_file(defaults.config_file_path)
+		# determine config directory location
+		self.__config_dir = args.config_directory if args.config_directory else defaults.config_folder_path
+
+		# generate config if should be generated end stop execution
+		if args.create_config:
+			print("Generating config directory: {}".format(self.__config_dir))
+			config_generator.create_config_directory(self.__config_dir)
+			return
+
+		self.__config = config_reader.read_config_file(defaults.get_global_config_path(self.__config_dir))
 
 		self.__start_processing()
 
@@ -52,34 +62,30 @@ class Application(object):
 		global_config_dict = self.__config.as_config_dict()
 		queue = queues.command_queue
 
-		for module_path in modules:
-			logger.debug("Inspecting module: {}".format(module_path))
+		for module_name in modules:
+			logger.debug("Inspecting module: {}".format(module_name))
 
 			# parse module config and convert it to a dict
-			config = configreader.read_config_file(defaults.get_module_config_file(module_path))
+			config = config_reader.read_config_file(defaults.get_module_config_path(self.__config_dir, module_name))
 			config_dict = config.as_config_dict()
 
-			# import the module
-			module = importlib.import_module(module_path)
-
 			# find all classes in the module extending AbstractModule
-			def is_reminisc_module(obj):
-				return (inspect.isclass(obj) and
-					issubclass(obj, am.AbstractModule) and
-					not inspect.isabstract(obj))
- 
-			classes = [cls for name, cls in inspect.getmembers(module) if is_reminisc_module(cls)]
+			reminisc_module_impls = module_utils.find_reminisc_module_implementations(module_name)
 
-			for cls in classes:
-				# instantiate the module class
-				mod_instance = cls(global_config_dict, config_dict, queue)
+			# only one class extending AbstractModule is going to be started per reminisc module
+			if len(reminisc_module_impls) > 1:
+				logger.error("Module {} has more than 1 module class. Module will not be started.".format(module_name))
+			else:
+				for impl in reminisc_module_impls:
+					# instantiate the module class
+					mod_instance = impl(global_config_dict, config_dict, queue)
 
-				# start thread for the module if can be started
-				if mod_instance.should_be_started():
-					logger.info("Starting {}".format(cls.__name__))
+					# start thread for the module if can be started
+					if mod_instance.should_be_started():
+						logger.info("Starting {}".format(impl.__name__))
 
-					thread = threading.Thread(target=mod_instance.start)
-					thread.daemon = True
-					thread.start()
-				else:
-					logger.warn("Module class {} is disabled".format(cls.__name__))
+						thread = threading.Thread(target=mod_instance.start)
+						thread.daemon = True
+						thread.start()
+					else:
+						logger.warn("Module class {} is disabled".format(impl.__name__))

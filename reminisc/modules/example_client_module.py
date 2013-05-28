@@ -4,9 +4,9 @@ import reminisc.core.processing.commands as commands
 
 from reminisc.modules.abstract_module import AbstractModule
 
-def start_module(global_config, module_config):
-	module = ExampleClientModule(global_config, module_config)
-	module.start()
+default_config = """[defaults]
+time_interval = 2
+"""
 
 class ExampleClientModule(AbstractModule):
 
@@ -23,6 +23,9 @@ class ExampleClientModule(AbstractModule):
 			interval = float(self.module_config.get("defaults", "time_interval", fallback = 1))
 			time.sleep(interval)
 			self.__generate_task()
+
+	def default_config():
+		return default_config
 
 	def __generate_task(self):
 		content = random.choice(self.commands)
