@@ -24,6 +24,7 @@ class ExampleClientModule(AbstractModule):
 			time.sleep(interval)
 			self.__generate_task()
 
+	@staticmethod
 	def default_config():
 		return default_config
 

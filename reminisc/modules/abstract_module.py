@@ -26,8 +26,9 @@ class AbstractModule(metaclass=abc.ABCMeta):
 
 		return
 
+	@staticmethod
 	@abc.abstractmethod
-	def default_config(self):
+	def default_config():
 		"""Returns content of the default config file for this module"""
 
 		return

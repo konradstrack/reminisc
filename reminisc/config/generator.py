@@ -31,9 +31,11 @@ def create_config_directory(path):
 				module_config = defaults.get_module_config_path(path, reminisc_module_name)
 
 				if not os.path.isdir(module_dir):
+					print(module_dir)
 					os.makedirs(module_dir)
 
 				if not os.path.isfile(module_config):
+					print(module_config)
 					config_file = open(module_config, 'w')
 					config_file.write(impl.default_config())
 					config_file.close()

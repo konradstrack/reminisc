@@ -14,7 +14,10 @@ modules_folder_name = 'modules'
 modules_folder_path = os.path.join(config_folder_path, modules_folder_name)
 
 # modules which are allowed to generate config files
-approved_reminisc_modules = ['reminisc.modules.example_client_module']
+approved_reminisc_modules = [
+	'reminisc.modules.example_client_module',
+	'reminisc.modules.gajim_import',
+]
 
 def get_global_config_path(main_dir_path):
 	return os.path.join(main_dir_path, config_file_name)
