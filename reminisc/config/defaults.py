@@ -27,3 +27,9 @@ def get_module_config_dir(main_dir_path, module_name):
 
 def get_module_config_path(main_dir_path, module_name):
 	return os.path.join(get_module_config_dir(main_dir_path, module_name), module_config_file_name)
+
+# configuration database
+config_database_file_name = 'config.db'
+
+def get_config_database_path(main_dir_path):
+	return os.path.join(main_dir_path, config_database_file_name)
