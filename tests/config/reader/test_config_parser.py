@@ -1,9 +1,8 @@
-import unittest
 import reminisc.config.reader as reader
 
-class ReminiscConfigParserTest(unittest.TestCase):
+class TestReminiscConfigParser(object):
 
-	def setUp(self):	
+	def setup_method(self, method):	
 		configstring = """
 			[Section A]
 			option 1 = 3000
@@ -17,5 +16,5 @@ class ReminiscConfigParserTest(unittest.TestCase):
 
 	def test_should_contain_valuse_from_config(self):
 		configdict = self.parser.as_config_dict()
-		self.assertEqual('Fry', configdict.get('Section B', 'option 3'))
-		self.assertEqual(3000, int(configdict.get('Section A', 'option 1')))
+		assert 'Fry' == configdict.get('Section B', 'option 3')
+		assert 3000 == int(configdict.get('Section A', 'option 1'))
