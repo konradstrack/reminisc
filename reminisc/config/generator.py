@@ -10,6 +10,14 @@ import reminisc.modules.utils as utils
 
 logger = logging.getLogger(__name__)
 
+create_settings_table = """
+	CREATE TABLE IF NOT EXISTS settings (
+		key TEXT NOT NULL,
+		value TEXT,
+		PRIMARY KEY (key)
+	)
+"""
+
 def create_config_directory(dirpath):
 	"""Creates config directory at the given path"""
 
@@ -55,7 +63,7 @@ def create_config_database(dbpath):
 	conn = sqlite3.connect(dbpath)
 
 	# settings table
-	conn.execute('create table settings(key text, value text)')
+	conn.execute(create_settings_table)
 
 	conn.commit()
 	conn.close()

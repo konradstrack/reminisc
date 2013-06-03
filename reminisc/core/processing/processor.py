@@ -22,7 +22,7 @@ class CommandProcessor(object):
 
 	@dispatch.when(commands.NewMessage)
 	def process(self, command):
-		logger.debug("New message: {}".format(command))
+		logger.debug("Message ({}): {}".format(command.direction, command.message))
 
 	@dispatch.when(commands.NewContact)
 	def process(self, command):

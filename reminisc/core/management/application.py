@@ -11,6 +11,8 @@ import reminisc.config.generator as config_generator
 import reminisc.config.defaults as defaults
 import reminisc.modules.utils as module_utils
 
+from reminisc.config.database import DbConfig
+
 logger = logging.getLogger(__name__)
 
 class Application(object):
@@ -78,7 +80,9 @@ class Application(object):
 			else:
 				for impl in reminisc_module_impls:
 					# instantiate the module class
-					mod_instance = impl(global_config_dict, config_dict, queue)
+					dbpath = defaults.get_config_database_path(self.__config_dir)
+					dbconfig = DbConfig(dbpath, prefix=module_name)
+					mod_instance = impl(global_config_dict, config_dict, queue, dbconfig)
 
 					# start thread for the module if can be started
 					if mod_instance.should_be_started():

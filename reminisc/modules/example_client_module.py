@@ -10,8 +10,8 @@ time_interval = 2
 
 class ExampleClientModule(AbstractModule):
 
-	def __init__(self, global_config, module_config, command_queue):
-		super().__init__(global_config, module_config, command_queue)
+	def __init__(self, global_config, module_config, command_queue, dbconfig):
+		super().__init__(global_config, module_config, command_queue, dbconfig)
 
 		self.commands = ["first", "second", "third"]
 

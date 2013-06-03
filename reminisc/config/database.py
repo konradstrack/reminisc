@@ -40,7 +40,13 @@ class DbConfig(object):
 		"""Saves value under the given key."""
 
 		pkey = self.__prefixed(key)
-		self.__conn.execute('insert into settings(key,value) values (?,?)', (pkey, value))
+
+		result = self.__conn.execute('select * from settings where key=?', (pkey,)).fetchone()
+		if result is None:
+			self.__conn.execute('insert into settings(key,value) values (:key,:value)', {'key': pkey, 'value': value})
+		else:
+			self.__conn.execute('update settings set value = :value where key = :key', {'key': pkey, 'value': value})
+
 		self.__conn.commit()
 
 	def __prefixed(self, key):
