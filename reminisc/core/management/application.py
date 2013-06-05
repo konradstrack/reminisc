@@ -12,6 +12,7 @@ import reminisc.config.defaults as defaults
 import reminisc.modules.utils as module_utils
 
 from reminisc.config.database import DbConfig
+from reminisc.core.storage.mongo import MongoDbStorage
 
 logger = logging.getLogger(__name__)
 
@@ -51,7 +52,7 @@ class Application(object):
 
 		def process_commands():
 			logger.info("Starting processor")
-			command_processor = processor.CommandProcessor(queues.command_queue)
+			command_processor = processor.CommandProcessor(queues.command_queue, MongoDbStorage(self.__config))
 			command_processor.start()
 
 		thread = threading.Thread(target=process_commands)

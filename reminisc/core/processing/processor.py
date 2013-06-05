@@ -9,8 +9,9 @@ dispatch = dispatcher.TypeDispatcher()
 class CommandProcessor(object):
 	"""Processes tasks available in the queue."""
 
-	def __init__(self, queue):
+	def __init__(self, queue, storage):
 		self.queue = queue
+		self.storage = storage
 
 	def _process_next(self):
 		task = self.queue.get()
@@ -22,7 +23,7 @@ class CommandProcessor(object):
 
 	@dispatch.when(commands.NewMessage)
 	def process(self, command):
-		logger.debug("Message ({}): {}".format(command.direction, command.message))
+		self.storage.store_message(command)
 
 	@dispatch.when(commands.NewContact)
 	def process(self, command):
