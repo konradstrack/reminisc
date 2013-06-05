@@ -1,6 +1,10 @@
 cov-core==1.7
 coverage==3.6
 distribute==0.6.39
+logilab-astng==0.24.3
+logilab-common==0.59.1
+mongoengine==0.8.1
 py==1.4.14
+pymongo==2.5.2
 pytest==2.3.5
 pytest-cov==1.6
