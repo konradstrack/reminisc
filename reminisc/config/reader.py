@@ -22,6 +22,9 @@ class ReminiscConfigParser(configparser.ConfigParser):
 
 		return ConfigDict(sections)
 
+# to allow passing None as a fallback in ConfigDict.get()
+sentinel = object()
+
 class ConfigDict(object):
 
 	 def __init__(self, dictionary):
@@ -30,10 +33,10 @@ class ConfigDict(object):
 	 def contains(self, section, option):
 	 	return section in self.__dict and option in self.__dict[section]
 
-	 def get(self, section, option, fallback=None):
+	 def get(self, section, option, fallback=sentinel):
 	 	if self.contains(section, option):
 	 		return self.__dict[section][option]
-	 	elif fallback is not None:
+	 	elif fallback is not sentinel:
 	 		return fallback
 	 	else:
 	 		raise KeyError("There's no such option in the config")

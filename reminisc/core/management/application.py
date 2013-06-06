@@ -52,7 +52,7 @@ class Application(object):
 
 		def process_commands():
 			logger.info("Starting processor")
-			command_processor = processor.CommandProcessor(queues.command_queue, MongoDbStorage(self.__config))
+			command_processor = processor.CommandProcessor(queues.command_queue, MongoDbStorage(self.__config.as_config_dict()))
 			command_processor.start()
 
 		thread = threading.Thread(target=process_commands)

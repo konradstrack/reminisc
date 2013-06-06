@@ -18,6 +18,8 @@ class CommandProcessor(object):
 		self.process(task)
 
 	def start(self):
+		self.storage.connect()
+
 		while True:
 			self._process_next()
 
