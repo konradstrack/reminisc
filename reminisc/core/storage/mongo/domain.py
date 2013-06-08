@@ -2,9 +2,9 @@ from mongoengine import StringField, ReferenceField, ListField, DateTimeField, B
 from mongoengine import Document, EmbeddedDocument
 
 class ContactIdentifier(EmbeddedDocument):
-	handle = StringField()
+	handle = StringField(required=True)
 	protocol = StringField()
-	source = StringField()
+	source = StringField(required=True)
 
 class Contact(Document):
 	name = StringField()
@@ -14,12 +14,14 @@ class Account(Document):
 	name = StringField()
 	handle = StringField()
 	protocol = StringField()
-	source = StringField()
+	source = StringField(required=True)
 	
 class Message(Document):
 	contact = ReferenceField(Contact)
 	account = ReferenceField(Account)
 	
+	account_hints = ListField(ReferenceField(Account))
+
 	datetime = DateTimeField()
-	incoming = BooleanField()
+	direction = StringField(choices=('Received', 'Sent'), required=True)
 	message = StringField()

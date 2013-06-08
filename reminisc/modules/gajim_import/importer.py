@@ -2,6 +2,9 @@ import sqlite3
 import os.path
 import time
 
+from itertools import groupby
+from functools import reduce
+
 from reminisc.core.processing.commands import NewMessage
 from datetime import datetime
 
@@ -26,7 +29,7 @@ query_messages = """select
 
 	left join jids as j on logs.jid_id = j.jid_id
 	left join roster_entry as re on logs.jid_id = re.jid_id
-	left join jids as aj on re.account_jid_id = aj.jid_id
+	join jids as aj on re.account_jid_id = aj.jid_id
 
 	where log_line_id > :last_id
 	and kind in (3, 4, 5, 6)
@@ -65,27 +68,36 @@ class IterativeImporter(object):
 		except KeyError:
 			last_id = 0
 
-		statement = self.conn.execute(query_messages, {'last_id': last_id, 'batch_size': 10000})
+		statement = self.conn.execute(query_messages, {'last_id': last_id, 'batch_size': 1000})
 		rows = statement.fetchall()
 
-		for row in rows:
-			self.__create_command(row)
+		# map rows into commands
+		groups = groupby(rows, lambda r: r['log_line_id'])
+
+		for group in groups:
+			lg = list(group[1])
+			account_hints = [r['account_jid'] for r in lg]
+
+			row = lg[0]
+			self.__create_command(row, account_hints)
 
 		if len(rows) > 0:
 			new_last_id = rows[-1]['log_line_id']
 			self.dbconfig.save('last_message_processed_id', new_last_id)
 			
 
-	def __create_command(self, row):
+	def __create_command(self, row, account_hints):
 		additional_arguments = {
-			'contact_name': row['contact_name']
+			'contact_name': row['contact_name'],
+			'protocol': 'XMPP',
+			'account_hints': account_hints
 		}
 
 		direction = NewMessage.Direction.RECEIVED if row['kind'] in (3, 4) else NewMessage.Direction.SENT
 
 		cmd = NewMessage(
 			source=source,
-			account_id=row['account_jid'],
+			account_id=None,
 			contact_id=row['contact_jid'],
 			datetime=datetime.fromtimestamp(row['time']),
 			message=row['message'],

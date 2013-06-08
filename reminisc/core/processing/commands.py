@@ -34,6 +34,8 @@ class NewMessage(object):
 		self.direction = direction
 
 		self.contact_name = kwargs.get('contact_name', None)
+		self.protocol = kwargs.get('protocol', None)
+		self.account_hints = kwargs.get('account_hints', None)
 
 
 class NewContact(object):
