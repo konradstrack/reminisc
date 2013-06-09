@@ -19,7 +19,7 @@ class NewMessage(object):
 		"""Constructs the new-message command.
 
 		:param source: source of the message, e.g. 'Gajim'
-		:param account_id: unique identifier of user's account (e.g. jid)
+		:param account_id: unique identifier of user's account (e.g. jid) or None if cannot be determined
 		:param contact_id: unique identifier of the contact (e.g. jid)
 		:param datetime: message creation time
 		:param message: content of the message
