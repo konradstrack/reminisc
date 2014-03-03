@@ -1,53 +1,53 @@
 import sqlite3
 
+
 class DbConfig(object):
+    def __init__(self, db_path, prefix=None):
+        self.__db_path = db_path
+        if prefix is None:
+            self.__prefix = None
+        else:
+            self.__prefix = prefix + '.'
 
-	def __init__(self, db_path, prefix=None):
-		self.__db_path = db_path
-		if prefix is None:
-			self.__prefix = None
-		else:
-			self.__prefix = prefix + '.'
+        self.__conn = None
 
-		self.__conn = None
+    def connect(self):
+        """Connects to the config database."""
 
-	def connect(self):
-		"""Connects to the config database."""
+        self.__conn = sqlite3.connect(self.__db_path)
+        self.__conn.row_factory = sqlite3.Row
 
-		self.__conn = sqlite3.connect(self.__db_path)
-		self.__conn.row_factory = sqlite3.Row
+    def close(self):
+        """Closes connection to the config database."""
 
-	def close(self):
-		"""Closes connection to the config database."""
+        if self.__conn is not None:
+            self.__conn.close()
 
-		if self.__conn is not None:
-			self.__conn.close()
+        self.__conn = None
 
-		self.__conn = None
+    def get(self, key):
+        """Returns value for the given key. Raises KeyError if it doesn't exist."""
 
-	def get(self, key):
-		"""Returns value for the given key. Raises KeyError if it doesn't exist."""
+        pkey = self.__prefixed(key)
+        result = self.__conn.execute('select * from settings where key=?', (pkey,)).fetchone()
 
-		pkey = self.__prefixed(key)
-		result = self.__conn.execute('select * from settings where key=?', (pkey,)).fetchone()
+        if result is None:
+            raise KeyError('There\'s no such key {} in the settings table'.format(pkey))
 
-		if result is None:
-			raise KeyError('There\'s no such key {} in the settings table'.format(pkey))
+        return result['value']
 
-		return result['value']
+    def save(self, key, value):
+        """Saves value under the given key."""
 
-	def save(self, key, value):
-		"""Saves value under the given key."""
+        pkey = self.__prefixed(key)
 
-		pkey = self.__prefixed(key)
+        result = self.__conn.execute('select * from settings where key=?', (pkey,)).fetchone()
+        if result is None:
+            self.__conn.execute('insert into settings(key,value) values (:key,:value)', {'key': pkey, 'value': value})
+        else:
+            self.__conn.execute('update settings set value = :value where key = :key', {'key': pkey, 'value': value})
 
-		result = self.__conn.execute('select * from settings where key=?', (pkey,)).fetchone()
-		if result is None:
-			self.__conn.execute('insert into settings(key,value) values (:key,:value)', {'key': pkey, 'value': value})
-		else:
-			self.__conn.execute('update settings set value = :value where key = :key', {'key': pkey, 'value': value})
+        self.__conn.commit()
 
-		self.__conn.commit()
-
-	def __prefixed(self, key):
-		return self.__prefix + key
+    def __prefixed(self, key):
+        return self.__prefix + key

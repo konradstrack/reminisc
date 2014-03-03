@@ -10,76 +10,77 @@ from reminisc.core.storage.mongo.domain import Contact, ContactIdentifier, Accou
 
 logger = logging.getLogger(__name__)
 
+
 class MongoDbStorage(Storage):
-	"""Storage implementation using MongoDB"""
+    """Storage implementation using MongoDB"""
 
-	def connect(self):
-		"""Connects to a MongoDB database based on the settings in config.
-		By default will not use any username nor password."""
+    def connect(self):
+        """Connects to a MongoDB database based on the settings in config.
+        By default will not use any username nor password."""
 
-		host = self.config.get('database', 'host')
-		port = int(self.config.get('database', 'port'))
-		database_name = self.config.get('database', 'database_name')
+        host = self.config.get('database', 'host')
+        port = int(self.config.get('database', 'port'))
+        database_name = self.config.get('database', 'database_name')
 
-		username = self.config.get('database', 'username', fallback=None)
-		password = self.config.get('database', 'password', fallback=None)
+        username = self.config.get('database', 'username', fallback=None)
+        password = self.config.get('database', 'password', fallback=None)
 
-		mongoengine.connect(database_name, host=host, port=port, username=username, 
-			password=password)
+        mongoengine.connect(database_name, host=host, port=port, username=username,
+                            password=password)
 
 
-	def store_message(self, command):
-		# get account and contact references
-		try:
-			if command.account_hints is not None:
-				hints = [self.__get_account(handle, command) for handle in command.account_hints]
-			else:
-				hints = []
+    def store_message(self, command):
+        # get account and contact references
+        try:
+            if command.account_hints is not None:
+                hints = [self.__get_account(handle, command) for handle in command.account_hints]
+            else:
+                hints = []
 
-			account = self.__get_account(command.account_id, command)
-		except MultipleObjectsReturned:
-			logger.error('Multiple accounts found for [{}, {}, {}]. Skipping message.'.format(
-				command.account_id, command.source, command.protocol))
-			return
+            account = self.__get_account(command.account_id, command)
+        except MultipleObjectsReturned:
+            logger.error('Multiple accounts found for [{}, {}, {}]. Skipping message.'.format(
+                command.account_id, command.source, command.protocol))
+            return
 
-		try:
-			contact = self.__get_contact(command)
-		except MultipleObjectsReturned:
-			logger.error('Multiple contacts found for [{}, {}, {}]. Skipping message.'.format(
-				command.contact_id, command.source, command.protocol))
-			return
+        try:
+            contact = self.__get_contact(command)
+        except MultipleObjectsReturned:
+            logger.error('Multiple contacts found for [{}, {}, {}]. Skipping message.'.format(
+                command.contact_id, command.source, command.protocol))
+            return
 
-		datetime = command.datetime
-		message = command.message
+        datetime = command.datetime
+        message = command.message
 
-		if command.direction == commands.NewMessage.Direction.RECEIVED:
-			direction = 'Received' 
-		else:
-			direction = 'Sent'
+        if command.direction == commands.NewMessage.Direction.RECEIVED:
+            direction = 'Received'
+        else:
+            direction = 'Sent'
 
-		Message(account=account, contact=contact, datetime=datetime, 
-			direction=direction, message=message).save()
+        Message(account=account, contact=contact, datetime=datetime,
+                direction=direction, message=message).save()
 
-		logger.debug("Message ({}): {}".format(command.direction, command.message))
+        logger.debug("Message ({}): {}".format(command.direction, command.message))
 
-	def __get_account(self, handle, command):
-		try:
-			account = Account.objects.get(handle=handle, source=command.source, 
-				protocol=command.protocol)
-		except DoesNotExist:
-			account = Account(handle=handle, source=command.source, protocol=command.protocol)
-			account.save()
-	
-		return account
+    def __get_account(self, handle, command):
+        try:
+            account = Account.objects.get(handle=handle, source=command.source,
+                                          protocol=command.protocol)
+        except DoesNotExist:
+            account = Account(handle=handle, source=command.source, protocol=command.protocol)
+            account.save()
 
-	def __get_contact(self, command):
-		try:
-			contact = Contact.objects.get(identifiers__handle=command.contact_id,
-				identifiers__protocol=command.protocol, identifiers__source=command.source)
-		except DoesNotExist:
-			identifier = ContactIdentifier(handle=command.contact_id,
-				protocol=command.protocol, source=command.source)
-			contact = Contact(name=command.contact_name, identifiers=[identifier])
-			contact.save()
+        return account
 
-		return contact
+    def __get_contact(self, command):
+        try:
+            contact = Contact.objects.get(identifiers__handle=command.contact_id,
+                                          identifiers__protocol=command.protocol, identifiers__source=command.source)
+        except DoesNotExist:
+            identifier = ContactIdentifier(handle=command.contact_id,
+                                           protocol=command.protocol, source=command.source)
+            contact = Contact(name=command.contact_name, identifiers=[identifier])
+            contact.save()
+
+        return contact
