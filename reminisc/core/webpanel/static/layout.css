@@ -1,0 +1,28 @@
+body {
+    background-color: #EEE9FF;
+    color: #221B38;
+    padding: 0;
+    margin: 0;
+    font-family: 'Open Sans', sans-serif;
+}
+
+#container {
+    display: table;
+    height: 100%;
+    width: 100%;
+}
+
+#navigation {
+    display: table-cell;
+    width: 200px;
+    background-color: #221B38;
+    border-right: 1px solid #3D257F;
+    color: white;
+    padding: 1em;
+}
+
+#right {
+    display: table-cell;
+    padding: 1em;
+}
+

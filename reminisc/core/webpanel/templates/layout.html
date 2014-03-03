@@ -1,9 +1,34 @@
 <!DOCTYPE html>
 <html>
+
 <head>
-    <title></title>
+    <title>reminisc | {% block title %}welcome{% endblock %}</title>
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='layout.css') }}">
 </head>
+
 <body>
 
+<div id="container">
+    <nav id="navigation">
+        <h1>reminisc</h1>
+    </nav>
+
+    <div id="right">
+        <div id="flash-messages">
+            {% with flashes = get_flashed_messages() %}
+            {% if flashes %}
+            <ul class="flashes">
+                {% for message in flashes %}
+                <li>{{ message }}
+                    {% endfor %}
+            </ul>
+            {% endif %}
+            {% endwith %}
+        </div>
+        <div class="main">
+            {% block body %}{% endblock %}
+        </div>
+    </div>
+</div>
 </body>
 </html>
