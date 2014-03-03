@@ -1,11 +1,9 @@
 import argparse
 import threading
-import importlib
 import logging
 
 import reminisc.core.processing.queues as queues
 import reminisc.core.processing.processor as processor
-import reminisc.modules.abstract_module as am
 import reminisc.config.reader as config_reader
 import reminisc.config.generator as config_generator
 import reminisc.config.defaults as defaults
@@ -16,81 +14,101 @@ from reminisc.core.storage.mongo import MongoDbStorage
 
 logger = logging.getLogger(__name__)
 
+
 class Application(object):
-	"""Main class of the application containing logic to parse configuration and start all components."""
+    """Main class of the application containing logic to parse configuration and start all components."""
 
-	def execute(self):
-		"""Starts the application."""
+    __config = None
+    __config_dir = None
 
-		# we don't take any arguments for now
-		parser = argparse.ArgumentParser()
-		parser.add_argument('--config-directory', help='config directory location')
-		parser.add_argument('--create-config', action='store_true', help='generate default configuration files')
-		args = parser.parse_args()
+    def execute(self):
+        """Starts the application."""
 
-		# determine config directory location
-		self.__config_dir = args.config_directory if args.config_directory else defaults.config_folder_path
+        # we don't take any arguments for now
+        parser = argparse.ArgumentParser()
+        parser.add_argument('--config-directory', help='config directory location')
+        parser.add_argument('--create-config', action='store_true', help='generate default configuration files')
+        parser.add_argument('--start-webpanel', action='store_true', help='start the web panel')
+        args = parser.parse_args()
 
-		# generate config if should be generated end stop execution
-		if args.create_config:
-			print("Generating config directory: {}".format(self.__config_dir))
-			config_generator.create_config_directory(self.__config_dir)
-			return
+        # determine config directory location
+        self.__config_dir = args.config_directory if args.config_directory else defaults.config_folder_path
 
-		self.__config = config_reader.read_config_file(defaults.get_global_config_path(self.__config_dir))
+        # generate config if should be generated end stop execution
+        if args.create_config:
+            print("Generating config directory: {}".format(self.__config_dir))
+            config_generator.create_config_directory(self.__config_dir)
+            return
 
-		self.__start_processing()
+        self.__config = config_reader.read_config_file(defaults.get_global_config_path(self.__config_dir))
 
-		# filter enabled modules from config and start them
-		enabled_modules = {k: v for (k, v) in self.__config.items('modules') if v == 'True'}
-		enabled_modules_names = map(lambda item: item[0], enabled_modules.items())
+        self.__start_processing()
 
-		self.__start_modules(enabled_modules_names)
+        # filter enabled modules from config and start them
+        enabled_modules = {k: v for (k, v) in self.__config.items('modules') if v == 'True'}
+        enabled_modules_names = map(lambda item: item[0], enabled_modules.items())
 
-	def __start_processing(self):
-		"""Starts threads responsible for processing incoming data."""
+        self.__start_modules(enabled_modules_names)
 
-		def process_commands():
-			logger.info("Starting processor")
-			command_processor = processor.CommandProcessor(queues.command_queue, MongoDbStorage(self.__config.as_config_dict()))
-			command_processor.start()
+        if args.start_webpanel:
+            self.__start_webpanel()
 
-		thread = threading.Thread(target=process_commands)
-		thread.deamon = True
-		thread.start()
+    def __start_processing(self):
+        """Starts threads responsible for processing incoming data."""
 
-	def __start_modules(self, modules):
-		"""Responsible for starting all enabled modules in separate threads."""
+        def process_commands():
+            logger.info("Starting processor")
+            command_processor = processor.CommandProcessor(queues.command_queue,
+                                                           MongoDbStorage(self.__config.as_config_dict()))
+            command_processor.start()
 
-		global_config_dict = self.__config.as_config_dict()
-		queue = queues.command_queue
+        thread = threading.Thread(target=process_commands)
+        thread.deamon = True
+        thread.start()
 
-		for module_name in modules:
-			logger.debug("Inspecting module: {}".format(module_name))
+    def __start_modules(self, modules):
+        """Responsible for starting all enabled modules in separate threads."""
 
-			# parse module config and convert it to a dict
-			config = config_reader.read_config_file(defaults.get_module_config_path(self.__config_dir, module_name))
-			config_dict = config.as_config_dict()
+        global_config_dict = self.__config.as_config_dict()
+        queue = queues.command_queue
 
-			# find all classes in the module extending AbstractModule
-			reminisc_module_impls = module_utils.find_reminisc_module_implementations(module_name)
+        for module_name in modules:
+            logger.debug("Inspecting module: {}".format(module_name))
 
-			# only one class extending AbstractModule is going to be started per reminisc module
-			if len(reminisc_module_impls) > 1:
-				logger.error("Module {} has more than 1 module class. Module will not be started.".format(module_name))
-			else:
-				for impl in reminisc_module_impls:
-					# instantiate the module class
-					dbpath = defaults.get_config_database_path(self.__config_dir)
-					dbconfig = DbConfig(dbpath, prefix=module_name)
-					mod_instance = impl(global_config_dict, config_dict, queue, dbconfig)
+            # parse module config and convert it to a dict
+            config = config_reader.read_config_file(defaults.get_module_config_path(self.__config_dir, module_name))
+            config_dict = config.as_config_dict()
 
-					# start thread for the module if can be started
-					if mod_instance.should_be_started():
-						logger.info("Starting {}".format(impl.__name__))
+            # find all classes in the module extending AbstractModule
+            reminisc_module_impls = module_utils.find_reminisc_module_implementations(module_name)
 
-						thread = threading.Thread(target=mod_instance.start)
-						thread.daemon = True
-						thread.start()
-					else:
-						logger.warn("Module class {} is disabled".format(impl.__name__))
+            # only one class extending AbstractModule is going to be started per reminisc module
+            if len(reminisc_module_impls) > 1:
+                logger.error("Module {} has more than 1 module class. Module will not be started.".format(module_name))
+            else:
+                for impl in reminisc_module_impls:
+                    # instantiate the module class
+                    dbpath = defaults.get_config_database_path(self.__config_dir)
+                    dbconfig = DbConfig(dbpath, prefix=module_name)
+                    mod_instance = impl(global_config_dict, config_dict, queue, dbconfig)
+
+                    # start thread for the module if can be started
+                    if mod_instance.should_be_started():
+                        logger.info("Starting {}".format(impl.__name__))
+
+                        thread = threading.Thread(target=mod_instance.start)
+                        thread.daemon = True
+                        thread.start()
+                    else:
+                        logger.warn("Module class {} is disabled".format(impl.__name__))
+
+    @staticmethod
+    def __start_webpanel():
+        from reminisc.core.webpanel.webpanel import app
+
+        def start_webpanel():
+            app.run()
+
+        thread = threading.Thread(target=start_webpanel)
+        thread.deamon = True
+        thread.start()

@@ -35,7 +35,8 @@ setup(
     packages=find_packages(),
 
     install_requires=[
-        'mongoengine==0.8.7'
+        'mongoengine==0.8.7',
+        'flask==0.10'
     ],
 
     package_data={
