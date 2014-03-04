@@ -26,3 +26,29 @@ body {
     padding: 1em;
 }
 
+ul.messages li {
+    display: block;
+    margin: 0.4em;
+    border-bottom: 1px solid #3D257F;
+    background-color: white;
+    padding: 0.4em;
+}
+
+ul.messages li span.contact {
+    font-size: 0.8em;
+    font-weight: bold;
+}
+
+ul.messages li span.datetime {
+    font-size: 0.8em;
+    color: #807e8a;
+}
+
+ul.messages li span.message {
+    margin-left: 1em;
+}
+
+ul.messages li span.direction {
+    margin-left: 1em;
+    font-size: 0.7em;
+}

@@ -2,7 +2,7 @@ import logging
 import reminisc.core.processing.commands as commands
 import reminisc.core.dispatcher as dispatcher
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger('root')
 
 dispatch = dispatcher.TypeDispatcher()
 

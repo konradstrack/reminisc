@@ -1,0 +1,21 @@
+{% extends "layout.html" %}
+{% block title %}
+messages for {{ account }}
+{% endblock %}
+
+{% block body %}
+    <h2>messages for <em>{{ account }}</em></h2>
+
+    <ul class="messages">
+    {% for msg in messages %}
+        <li>
+            <span class="datetime">{{ msg.datetime }}</span>
+            <span class="message">{{ msg.message }}</span>
+            &mdash; <span class="contact">{{ msg.contact }}</span>
+            <span class="direction">{{ msg.direction }}</span>
+        </li>
+    {% else %}
+        <p>There are no messages.</p>
+    {% endfor %}
+    </ul>
+{% endblock %}

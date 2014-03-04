@@ -19,3 +19,8 @@ class Storage(metaclass=abc.ABCMeta):
     def store_message(self, command):
         """Stores message based on the given command"""
         pass
+
+    @abc.abstractmethod
+    def get_messages(self, account_handles, **kwargs):
+        """Retrieves messages and returns them in a database agnostic form"""
+        pass

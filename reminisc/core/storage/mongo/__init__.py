@@ -4,11 +4,12 @@ import mongoengine
 from mongoengine import MultipleObjectsReturned, DoesNotExist
 
 import reminisc.core.processing.commands as commands
-
 from reminisc.core.storage import Storage
+
+from reminisc.core.storage.entities import Message as DTOMessage
 from reminisc.core.storage.mongo.domain import Contact, ContactIdentifier, Account, Message
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger('root')
 
 
 class MongoDbStorage(Storage):
@@ -32,15 +33,10 @@ class MongoDbStorage(Storage):
     def store_message(self, command):
         # get account and contact references
         try:
-            if command.account_hints is not None:
-                hints = [self.__get_account(handle, command) for handle in command.account_hints]
-            else:
-                hints = []
-
-            account = self.__get_account(command.account_id, command)
+            account = self.__get_account(command.account_ids, command)
         except MultipleObjectsReturned:
             logger.error('Multiple accounts found for [{}, {}, {}]. Skipping message.'.format(
-                command.account_id, command.source, command.protocol))
+                command.account_ids, command.source, command.protocol))
             return
 
         try:
@@ -63,12 +59,21 @@ class MongoDbStorage(Storage):
 
         logger.debug("Message ({}): {}".format(command.direction, command.message))
 
-    def __get_account(self, handle, command):
+    def get_messages(self, account_handle, **kwargs):
         try:
-            account = Account.objects.get(handle=handle, source=command.source,
+            accounts = Account.objects(handles__in=[account_handle])
+        except DoesNotExist:
+            return []
+
+        messages = Message.objects(account__in=accounts).all()[:20]
+        return [DTOMessage(msg.message, msg.datetime, msg.direction, msg.contact.name) for msg in messages]
+
+    def __get_account(self, handles, command):
+        try:
+            account = Account.objects.get(handles=handles, source=command.source,
                                           protocol=command.protocol)
         except DoesNotExist:
-            account = Account(handle=handle, source=command.source, protocol=command.protocol)
+            account = Account(handles=handles, source=command.source, protocol=command.protocol)
             account.save()
 
         return account

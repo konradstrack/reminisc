@@ -12,7 +12,8 @@ import reminisc.modules.utils as module_utils
 from reminisc.config.database import DbConfig
 from reminisc.core.storage.mongo import MongoDbStorage
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger('root')
+logger.setLevel(logging.INFO)
 
 
 class Application(object):
@@ -102,13 +103,11 @@ class Application(object):
                     else:
                         logger.warn("Module class {} is disabled".format(impl.__name__))
 
-    @staticmethod
-    def __start_webpanel():
-        from reminisc.core.webpanel.webpanel import app
+    def __start_webpanel(self):
+        from reminisc.core.webpanel import webpanel
 
-        def start_webpanel():
-            app.run()
+        webpanel.storage = MongoDbStorage(self.__config.as_config_dict())
 
-        thread = threading.Thread(target=start_webpanel)
+        thread = threading.Thread(target=webpanel.start)
         thread.deamon = True
         thread.start()

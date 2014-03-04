@@ -1,5 +1,6 @@
-from mongoengine import StringField, ReferenceField, ListField, DateTimeField, BooleanField, EmbeddedDocumentField
+from mongoengine import StringField, ReferenceField, ListField, DateTimeField, EmbeddedDocumentField
 from mongoengine import Document, EmbeddedDocument
+from mongoengine.fields import SortedListField
 
 
 class ContactIdentifier(EmbeddedDocument):
@@ -15,7 +16,7 @@ class Contact(Document):
 
 class Account(Document):
     name = StringField()
-    handle = StringField()
+    handles = SortedListField(StringField())
     protocol = StringField()
     source = StringField(required=True)
 

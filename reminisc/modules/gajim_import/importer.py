@@ -1,3 +1,4 @@
+import logging
 import sqlite3
 import os.path
 import time
@@ -7,6 +8,8 @@ from functools import reduce
 
 from reminisc.core.processing.commands import NewMessage
 from datetime import datetime
+
+logger = logging.getLogger(__name__)
 
 source = 'Gajim'
 
@@ -59,6 +62,7 @@ class IterativeImporter(object):
         polling_interval = float(self.module_config.get('history', 'polling_interval', fallback=1))
 
         while True:
+            logger.debug("Importing next batch.")
             self.__import_next_batch()
             time.sleep(polling_interval)
 
@@ -76,28 +80,27 @@ class IterativeImporter(object):
 
         for group in groups:
             lg = list(group[1])
-            account_hints = [r['account_jid'] for r in lg]
+            account_handles = [r['account_jid'] for r in lg]
 
             row = lg[0]
-            self.__create_command(row, account_hints)
+            self.__create_command(row, account_handles)
 
         if len(rows) > 0:
             new_last_id = rows[-1]['log_line_id']
             self.dbconfig.save('last_message_processed_id', new_last_id)
 
 
-    def __create_command(self, row, account_hints):
+    def __create_command(self, row, account_handles):
         additional_arguments = {
             'contact_name': row['contact_name'],
             'protocol': 'XMPP',
-            'account_hints': account_hints
         }
 
         direction = NewMessage.Direction.RECEIVED if row['kind'] in (3, 4) else NewMessage.Direction.SENT
 
         cmd = NewMessage(
             source=source,
-            account_id=None,
+            account_ids=account_handles,
             contact_id=row['contact_jid'],
             datetime=datetime.fromtimestamp(row['time']),
             message=row['message'],

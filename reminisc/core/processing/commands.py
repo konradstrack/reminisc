@@ -17,11 +17,11 @@ class NewMessage(object):
     # an enum representing direction
     Direction = Enum(['RECEIVED', 'SENT'])
 
-    def __init__(self, source, account_id, contact_id, datetime, message, direction, **kwargs):
+    def __init__(self, source, account_ids, contact_id, datetime, message, direction, **kwargs):
         """Constructs the new-message command.
 
         :param source: source of the message, e.g. 'Gajim'
-        :param account_id: unique identifier of user's account (e.g. jid) or None if cannot be determined
+        :param account_ids: list of unique identifiers of user's account (e.g. jid)
         :param contact_id: unique identifier of the contact (e.g. jid)
         :param datetime: message creation time
         :param message: content of the message
@@ -29,7 +29,7 @@ class NewMessage(object):
         """
 
         self.source = source
-        self.account_id = account_id
+        self.account_ids = account_ids
         self.contact_id = contact_id
         self.datetime = datetime
         self.message = message
@@ -37,7 +37,6 @@ class NewMessage(object):
 
         self.contact_name = kwargs.get('contact_name', None)
         self.protocol = kwargs.get('protocol', None)
-        self.account_hints = kwargs.get('account_hints', None)
 
 
 class NewContact(object):
