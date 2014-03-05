@@ -1,6 +1,4 @@
-class Message(object):
-    def __init__(self, message, datetime, direction, contact):
-        self.message = message
-        self.datetime = datetime
-        self.direction = direction
-        self.contact = contact
+from collections import namedtuple
+
+Message = namedtuple('Message', ['text', 'datetime', 'direction', 'contact'])
+Account = namedtuple('Account', ['id', 'name', 'handles', 'protocol', 'source'])

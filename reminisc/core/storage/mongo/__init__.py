@@ -6,7 +6,7 @@ from mongoengine import MultipleObjectsReturned, DoesNotExist
 import reminisc.core.processing.commands as commands
 from reminisc.core.storage import Storage
 
-from reminisc.core.storage.entities import Message as DTOMessage
+from reminisc.core.storage.entities import Message as MessageTuple, Account as AccountTuple
 from reminisc.core.storage.mongo.domain import Contact, ContactIdentifier, Account, Message
 
 logger = logging.getLogger('root')
@@ -28,7 +28,6 @@ class MongoDbStorage(Storage):
 
         mongoengine.connect(database_name, host=host, port=port, username=username,
                             password=password)
-
 
     def store_message(self, command):
         # get account and contact references
@@ -66,14 +65,28 @@ class MongoDbStorage(Storage):
             return []
 
         messages = Message.objects(account__in=accounts).all()[:20]
-        return [DTOMessage(msg.message, msg.datetime, msg.direction, msg.contact.name) for msg in messages]
+        return [MessageTuple(text=msg.message, datetime=msg.datetime, direction=msg.direction, contact=msg.contact.name)
+                for msg in messages]
 
-    def __get_account(self, handles, command):
+    def get_accounts(self, **kwargs):
         try:
-            account = Account.objects.get(handles=handles, source=command.source,
+            accounts = [AccountTuple(id=acc.id,
+                                     name=acc.name,
+                                     handles=acc.handles,
+                                     protocol=acc.protocol,
+                                     source=acc.source)
+                        for acc in Account.objects.all()[:20]]
+        except DoesNotExist:
+            accounts = []
+
+        return accounts
+
+    def __get_account(self, account_handles, command):
+        try:
+            account = Account.objects.get(handles__in=account_handles, source=command.source,
                                           protocol=command.protocol)
         except DoesNotExist:
-            account = Account(handles=handles, source=command.source, protocol=command.protocol)
+            account = Account(handles=account_handles, source=command.source, protocol=command.protocol)
             account.save()
 
         return account

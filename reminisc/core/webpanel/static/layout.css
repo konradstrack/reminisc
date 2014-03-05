@@ -21,12 +21,28 @@ body {
     padding: 1em;
 }
 
+#navigation ul {
+    padding-left: 0;
+}
+
+#navigation li {
+    list-style: none;
+}
+
+#navigation a {
+    color: white;
+}
+
+#navigation a:hover {
+    color: #807e8a;
+}
+
 #right {
     display: table-cell;
     padding: 1em;
 }
 
-ul.messages li {
+ul.messages > li, ul.accounts > li {
     display: block;
     margin: 0.4em;
     border-bottom: 1px solid #3D257F;
@@ -51,4 +67,10 @@ ul.messages li span.message {
 ul.messages li span.direction {
     margin-left: 1em;
     font-size: 0.7em;
+}
+
+ul.accounts li span.name,
+ul.accounts li span.protocol,
+ul.accounts li span.source {
+    font-weight: bold;
 }

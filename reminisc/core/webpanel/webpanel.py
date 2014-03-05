@@ -13,6 +13,12 @@ def home():
     return render_template('home.html')
 
 
+@app.route('/accounts')
+def accounts():
+    account_list = storage.get_accounts()
+    return render_template('accounts.html', accounts=account_list)
+
+
 @app.route('/account/<handle>/messages')
 def messages(handle):
     msgs = storage.get_messages(handle)

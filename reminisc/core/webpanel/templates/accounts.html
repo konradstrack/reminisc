@@ -1,0 +1,27 @@
+{% extends "layout.html" %}
+{% block title %}
+accounts
+{% endblock %}
+
+{% block body %}
+<h2>accounts</h2>
+
+<ul class="accounts">
+    {% for acc in accounts %}
+    <li>
+        name: <span class="name">{{ acc.name }}</span>,
+        protocol: <span class="protocol">{{ acc.protocol }}</span>,
+        source: <span class="source">{{ acc.source }}</span>
+        <span class="handles">
+            <ul>
+                {% for handle in acc.handles %}
+                <li><a href="{{ url_for('messages', handle=handle) }}">{{ handle }}</a></li>
+                {% endfor %}
+            </ul>
+        </span>
+    </li>
+    {% else %}
+    <p>There are no accounts.</p>
+    {% endfor %}
+</ul>
+{% endblock %}

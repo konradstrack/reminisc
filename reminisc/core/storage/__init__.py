@@ -24,3 +24,8 @@ class Storage(metaclass=abc.ABCMeta):
     def get_messages(self, account_handles, **kwargs):
         """Retrieves messages and returns them in a database agnostic form"""
         pass
+
+    @abc.abstractmethod
+    def get_accounts(self, **kwargs):
+        """Retrieves accounts and returns them in a database agnostic form"""
+        pass
